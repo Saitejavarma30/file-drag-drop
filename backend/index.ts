@@ -21,9 +21,7 @@ app.use(express.json());
 
 // Connect to MongoDB
 mongoose
-  .connect(
-    "mongodb+srv://jsv10:Kcibaap65TfGcV4n@file-drag-drop.4b0bz.mongodb.net/"
-  )
+  .connect("")
   .then(() => console.log("Connected to MongoDB"))
   .catch((err: any) => console.error("MongoDB connection error:", err));
 
