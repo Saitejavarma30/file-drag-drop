@@ -48,7 +48,6 @@ function App() {
   const [newFolderName, setNewFolderName] = useState("");
 
   useEffect(() => {
-    // Fetch initial data
     const fetchData = async () => {
       try {
         const [itemsRes, foldersRes] = await Promise.all([
@@ -63,8 +62,6 @@ function App() {
     };
 
     fetchData();
-
-    // Socket.io event listeners
     socket.on("itemAdded", (newItem: Item) => {
       setItems((prevItems) => [...prevItems, newItem]);
     });
@@ -154,37 +151,29 @@ function App() {
     console.log("Drag result:", result);
     const { source, destination, draggableId, type } = result;
 
-    // Dropped outside the list
     if (!destination) {
       console.log("Dropped outside list");
       return;
     }
 
-    // Handle item drag
     if (type === "ITEM") {
       console.log(
         `Moving item from ${source.droppableId} to ${destination.droppableId}`
       );
 
-      // Create a copy of the items array
       const itemsCopy = [...items];
 
-      // Find the item being dragged
       const draggedItem = itemsCopy.find((item) => item._id === draggableId);
       if (!draggedItem) {
         console.error("Item not found:", draggableId);
         return;
       }
 
-      // Update the item's folderId based on destination
       const newFolderId =
         destination.droppableId === "UNGROUPED_ITEMS"
           ? null
           : destination.droppableId;
-
-      // Handle reordering within the same container
       if (source.droppableId === destination.droppableId) {
-        // Get items in the same container
         const containerItems = itemsCopy.filter(
           (item) =>
             (source.droppableId === "UNGROUPED_ITEMS" &&
@@ -192,12 +181,9 @@ function App() {
             item.folderId === source.droppableId
         );
 
-        // Remove the dragged item
         const [removed] = containerItems.splice(source.index, 1);
-        // Insert at new position
         containerItems.splice(destination.index, 0, removed);
 
-        // Update orders
         const updatedItems = itemsCopy.map((item) => {
           if (
             (source.droppableId === "UNGROUPED_ITEMS" &&
@@ -210,31 +196,24 @@ function App() {
           return item;
         });
 
-        // Update state
         setItems(updatedItems);
 
-        // Update in backend
         try {
           await axios.put(`${API_URL}/reorder`, { items: updatedItems });
         } catch (error) {
           console.error("Error updating item order:", error);
         }
       } else {
-        // Create updated item
         const updatedItem = {
           ...draggedItem,
           folderId: newFolderId,
         };
 
-        // Update the item in the array
         const updatedItems = itemsCopy.map((item) =>
           item._id === draggableId ? updatedItem : item
         );
 
-        // Update state
         setItems(updatedItems);
-
-        // Update in backend
         try {
           await axios.put(`${API_URL}/items/${draggableId}`, {
             folderId: newFolderId,
@@ -245,33 +224,25 @@ function App() {
       }
     }
 
-    // Handle folder drag
     if (type === "FOLDER") {
       console.log(
         `Moving folder from index ${source.index} to ${destination.index}`
       );
 
-      // If destination is a folder container, we're reordering folders
       if (destination.droppableId === "FOLDERS_LIST") {
-        // Create a copy of the folders array
         const foldersCopy = [...folders];
 
-        // Remove the folder from its original position
         const [removed] = foldersCopy.splice(source.index, 1);
 
-        // Insert the folder at its new position
         foldersCopy.splice(destination.index, 0, removed);
 
-        // Update order of all folders
         const updatedFolders = foldersCopy.map((folder, index) => ({
           ...folder,
           order: index,
         }));
 
-        // Update state
         setFolders(updatedFolders);
 
-        // Update in backend
         try {
           await axios.put(`${API_URL}/reorder`, { folders: updatedFolders });
         } catch (error) {
@@ -327,7 +298,6 @@ function App() {
                     minHeight: "50px",
                   }}
                 >
-                  {/* Special "Ungrouped Items" folder */}
                   <Box
                     sx={{
                       bgcolor: "white",
@@ -449,7 +419,6 @@ function App() {
 
                               {folder.isOpen && (
                                 <div style={{ paddingLeft: "20px" }}>
-                                  {/* Droppable for items */}
                                   <Droppable
                                     droppableId={folder._id}
                                     type="ITEM"
@@ -520,7 +489,6 @@ function App() {
         </DragDropContext>
       </Box>
 
-      {/* Add Item Dialog */}
       <Dialog open={openItemDialog} onClose={() => setOpenItemDialog(false)}>
         <DialogTitle>Add New Item</DialogTitle>
         <DialogContent>
@@ -557,8 +525,6 @@ function App() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Add Folder Dialog */}
       <Dialog
         open={openFolderDialog}
         onClose={() => setOpenFolderDialog(false)}
